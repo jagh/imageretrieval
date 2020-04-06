@@ -1,5 +1,5 @@
 """
-+ Using a VGG19 Network to generate a heatmap fetures of an input imageself.
++ Using a VGG19 Network to generate a heatmap features of an input imageself.
 + Dataset source: https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia
 + Script base in the binary classifier kernel:
 """
@@ -41,7 +41,7 @@ def dprint(*args, debug):
         print(args)
 
 ## shows the activation heat map of the input image
-def show_heatmap(inp_img, model, index, alpha=0.7, debug=False):
+def show_heatmap(name_img, inp_img, model, index, alpha=0.7, debug=False):
     # convert the image into a numpy array
     inp_arr = np.array(inp_img).reshape(1, inp_img.width, inp_img.height, 3)
     # predict the class of the image and print the top 3 predictions
@@ -78,8 +78,8 @@ def show_heatmap(inp_img, model, index, alpha=0.7, debug=False):
 
     # show the result
     display(input_heatmap)
-    heatmap.save("heatmap_cnn_features.bmp")
-    input_heatmap.save("heatmap_CXR_image.bmp")
+    heatmap.save(str("cxr_dataset/visualization_samples/"+name_img+"-heatmap.bmp"))
+    input_heatmap.save(str("cxr_dataset/visualization_samples/"+name_img+"-heatmap_CXR.bmp"))
 
 
 
@@ -98,5 +98,6 @@ def load_images(path, img_w=224, img_h=224):
         inp_img = Image.open(p)
         yield inp_img.resize((img_w, img_h))
 
-for img in load_images("cxr_dataset/IM-0226-0001.png"):
-    show_heatmap(img, vgg, index=activations_index, alpha=0.8, debug=False)
+name_img = "p01-normal"
+for img in load_images(str("cxr_dataset/visualization_samples/"+name_img+".png")):
+    show_heatmap(name_img, img, vgg, index=activations_index, alpha=0.8, debug=False)
