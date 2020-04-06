@@ -3,4 +3,3 @@ cxr_dataset/train/*
 
 ## CNN binary clasifier
 *.h5
-*.png
