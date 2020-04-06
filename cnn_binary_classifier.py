@@ -1,5 +1,5 @@
 """
-+ A cnn model to classify normal and pneumonia chest x-ray images
++ A cnn model to classify normal and pneumonia chest x-ray images.
 + Dataset source: https://www.kaggle.com/paultimothymooney/chest-xray-pneumonia
 + Script base in the binary classifier kernel: https://www.kaggle.com/kosovanolexandr/keras-nn-x-ray-predict-pneumonia-86-54
 """
