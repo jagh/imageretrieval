@@ -3,3 +3,6 @@ cxr_dataset/train/*
 
 ## CNN binary clasifier
 *.h5
+
+## Others
+__pycache__/*
