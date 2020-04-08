@@ -1,6 +1,10 @@
 ## Large dataset
 cxr_dataset/train/*
 
+## iNNvestigate utils
+innvestigate/*
+
+
 ## CNN binary clasifier
 *.h5
 
