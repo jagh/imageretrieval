@@ -150,30 +150,19 @@ plt.savefig("outputs/plot_cnn_loss.png")
 ########################################################################
 
 ## Loading an image in a tensor shape and adding the bach dimensions
-img = cv2.imread(str(test_data_dir+"/NORMAL/IM-0001-0001.jpeg"))
+# img_name = "/NORMAL/IM-0001-0001.jpeg"
+img_name = "/PNEUMONIA/person1_virus_6.jpeg"
+img = cv2.imread(str(test_data_dir+img_name))
 img_resize = cv2.resize(img, dsize=(img_width, img_height), interpolation=cv2.INTER_CUBIC)
 img_expand = np.expand_dims(img_resize, axis=0)
 
-# score_img = model.evaluate(img_expand, batch_size=1)
-# print("++ Test Image Accuracy: {} ++".format(score_img))
+score_img = model.predict_classes(img_expand)
+print("++ Normal Image Classification: {} ++".format(score_img))
 
 plt.figure(1)
 plt.imshow(img_expand.squeeze(), cmap='gray', interpolation='nearest')
 plt.savefig("outputs/cxr_image.png")
 plt.close()
-
-
-
-### Using the analyzer iNNvestigate
-
-## Linear method
-# # Stripping the softmax activation from the model
-# model_wo_sm = iutils.keras.graph.model_wo_softmax(model)
-# # Creating an analyzer
-# gradient_analyzer = innvestigate.analyzer.Gradient(model_wo_sm)
-
-# ## Applying the analyzer
-# analysis = gradient_analyzer.analyze(img_expand)
 
 
 ## Using DeepTaylor method as analyzer
