@@ -37,21 +37,10 @@ validation_data_dir = str(dir_Dset + "/val/")
 test_data_dir = str(dir_Dset + "/test/")
 visualization_samples = str(dir_Dset + "/visualization_samples/")
 
-# ## Explore Dataset
-# img_normal_name = 'NORMAL2-IM-0588-0001.jpeg'
-# img_normal = load_img(str(train_data_dir + "/NORMAL/" + img_normal_name))
-# plt.savefig("img_patient-normal.png")
-# print("-- SAVED IMG NORMAL --")
-#
-# img_pneumonia_name = 'person63_bacteria_306.jpeg'
-# img_pneumonia = load_img(str(train_data_dir + "/PNEUMONIA/" + img_pneumonia_name))
-# plt.savefig("img_patient-pneumonia.png")
-# print("-- SAVED IMG PNEUMONIA --")
-
 
 ## Set CXR image dimensions
-img_width, img_height = 150, 150
-# img_width, img_height = 224, 224
+# img_width, img_height = 150, 150
+img_width, img_height = 224, 224
 
 if K.image_data_format() == 'channels_first':
     input_shape = (3, img_width, img_height)
