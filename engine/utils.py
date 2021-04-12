@@ -5,7 +5,7 @@ import cv2
 import collections
 import numpy as np
 
-DataIndex = collections.namedtuple('DataIndex', 'name img_paths labels')
+DataIndex = collections.namedtuple('DataIndex', 'name img_paths labels labels_name')
 Dataset = collections.namedtuple('Dataset', 'name imgs labels')
 
 class Utils:

@@ -2,10 +2,11 @@
 import os
 import pandas as pd
 import collections
+from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.model_selection import train_test_split
 
 
-DataIndex = collections.namedtuple('DataIndex', 'name img_paths labels')
+DataIndex = collections.namedtuple('DataIndex', 'name img_paths labels labels_name')
 
 class CheXpert:
     """ Module for preprocessing Chexpert Dataset """
@@ -26,16 +27,16 @@ class CheXpert:
             ## Get the label
             if row[1]['Pleural Effusion'] == 1 and row[1]['Frontal/Lateral'] == 'Frontal' and row[1]['AP/PA'] == 'AP':
                 # custom_chx_dataset.append(str(row[1]['Path']+"|"+'PLE'))
-                self.chx_data_index.append([row[1]['Path'], 'PLE'])
+                self.chx_data_index.append([row[1]['Path'], 'P'])
 
             elif row[1]['Consolidation'] == 1 and row[1]['Frontal/Lateral'] == 'Frontal' and row[1]['AP/PA'] == 'AP':
-                self.chx_data_index.append([row[1]['Path'], 'CON'])
+                self.chx_data_index.append([row[1]['Path'], 'C'])
 
             elif row[1]['Pleural Effusion'] != 1 and row[1]['Consolidation'] != 1 and \
                     row[1]['Pleural Effusion'] != 0 and row[1]['Consolidation'] != 0 and \
                     row[1]['Pleural Effusion'] != -1 and row[1]['Consolidation'] != -1 and \
                     row[1]['Frontal/Lateral'] == 'Frontal' and row[1]['AP/PA'] == 'AP':
-                self.chx_data_index.append([row[1]['Path'], 'OTH'])
+                self.chx_data_index.append([row[1]['Path'], 'O'])
 
             else:
                 pass
@@ -53,21 +54,24 @@ class CheXpert:
 
         ## Check if data_index is a list
         if isinstance(self.chx_data_index, list):
-            self.chx_data_index = pd.DataFrame(self.chx_data_index, columns=["img_path", "label"])
+            self.chx_data_index = pd.DataFrame(self.chx_data_index, columns=["img_path", "label_name"])
+
+
+        ## Convert labels in one-hot
+        mlb = MultiLabelBinarizer(classes=["P", "C", "O"], sparse_output=False)
+        mlb.fit(self.chx_data_index["label_name"])
 
         X_train, X_valid, y_train, y_valid = train_test_split(self.chx_data_index['img_path'],
-                                                                self.chx_data_index['label'],
+                                                                self.chx_data_index['label_name'],
                                                                 test_size=test_size)
 
         ## Datasplit instances
-        train = DataIndex(name='train', img_paths=X_train.values, labels=y_train.values)
-        valid = DataIndex(name='valid', img_paths=X_valid.values, labels=y_valid.values)
+        train = DataIndex(name='train', img_paths=X_train.values,
+                            labels=mlb.transform(y_train.values), labels_name=y_train.values)
+        valid = DataIndex(name='valid', img_paths=X_valid.values,
+                            labels=mlb.transform(y_valid.values), labels_name=y_valid.values)
 
         return train, valid
-
-
-
-
 
 
 
@@ -91,9 +95,11 @@ class CheXpert:
 # train, valid = CheXpert().dataset_splitting(chx_data_index)
 #
 # ## Saving the training set location
-# train_df = pd.DataFrame(list(zip(train.img_paths, train.labels)), columns=["img_paths", "labels"])
+# train_df = pd.DataFrame(list(zip(train.img_paths, train.labels, train.labels_name)),
+#                                 columns=["img_paths", "labels", "labels_name"])
 # train_df.to_csv(os.path.join(metadata_dir, "chx_train_set.csv"), index=False)
 #
 # ## Saving the validation set location
-# valid_df = pd.DataFrame(list(zip(valid.img_paths, valid.labels)), columns=["img_paths", "labels"])
+# valid_df = pd.DataFrame(list(zip(valid.img_paths, valid.labels, valid.labels_name)),
+#                                 columns=["img_paths", "labels", "labels_name"])
 # valid_df.to_csv(os.path.join(metadata_dir, "chx_valid_set.csv"), index=False)
