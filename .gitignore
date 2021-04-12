@@ -1,13 +1,9 @@
 ## testbed folder
-testbed/*
+testbed/
 
 ## iNNvestigate utils
 innvestigate/
 
-
-## CNN binary clasifier
-*.h5
-
 ## Others
-__pycache__/*
+__pycache__/
 engine/__pycache__
