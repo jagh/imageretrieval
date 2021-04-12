@@ -2,7 +2,7 @@
 testbed/*
 
 ## iNNvestigate utils
-innvestigate/*
+innvestigate/
 
 
 ## CNN binary clasifier
@@ -10,3 +10,4 @@ innvestigate/*
 
 ## Others
 __pycache__/*
+engine/__pycache__
