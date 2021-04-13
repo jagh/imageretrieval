@@ -77,6 +77,9 @@ class CheXpert:
 
 
 
+from pydicom import dcmread
+from pydicom.pixel_data_handlers.util import apply_voi_lut
+
 class MIMICCXR:
         """ Module for preprocessing MIMIC-CHX Dataset """
 
