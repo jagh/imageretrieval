@@ -20,7 +20,7 @@ def displayLearningCurves(history):
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
     plt.legend(['train', 'val'], loc='upper left')
-    plt.savefig("outputs/plot_ccn_accuracy.png")
+    plt.savefig(os.path.join(dir_dnn_train, "accuracy.png"))
     plt.close()
 
     ## Loss plot
@@ -31,7 +31,7 @@ def displayLearningCurves(history):
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'val'], loc='upper left')
-    plt.savefig("outputs/plot_cnn_loss.png")
+    plt.savefig(os.path.join(dir_dnn_train, "loss.png"))
     plt.close()
 
 #######################################################################
