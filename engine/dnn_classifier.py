@@ -24,7 +24,6 @@ class DenseNET121:
     def __init__(self):
         pass
 
-
     def baseline_image_aumentation(self):
         """ Image augmentation and transformations """
         train_aug = ImageDataGenerator(
@@ -58,9 +57,7 @@ class DenseNET121:
 
         return model
 
-
-
-    def fit_model(self, train_set, valid_set, epochs=2, batch_size=36):
+    def fit_model(self, train_set, valid_set, epochs=2, batch_size=32):
         """ Training the model """
 
         train_aug, valid_aug = self.baseline_image_aumentation()
