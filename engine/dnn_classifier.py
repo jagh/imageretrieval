@@ -17,6 +17,17 @@ from keras.applications.densenet import DenseNet121, preprocess_input
 
 Dataset = collections.namedtuple('Dataset', 'name imgs labels')
 
+## GPU environment flag
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="6"
+
+## prevent OOM issues
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+config = tf.ConfigProto(allow_soft_placement=True)
+config.gpu_options.allow_growth = True
+sess = tf.Session(config=config)
+K.set_session(sess)
+
 
 class DenseNET121:
     """Module for training a CheXpert model from a DenseNet121-ImageNet weights  """

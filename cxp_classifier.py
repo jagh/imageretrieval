@@ -51,8 +51,8 @@ dir_dnn_train = Utils.make_dir(sandbox + "/02-training/")
 ######################################################################
 # preprocessing
 # step-1: Get labels from CheXpert dataset
-metadata_dir = "/data/01_UB/CXR_Datasets/CheXpert-v1.0-small/"
-# metadata_dir = "/home/jgarcia/datasets/CXR_Datasets/CheXpert-v1.0-small/"
+#metadata_dir = "/data/01_UB/CXR_Datasets/CheXpert-v1.0-small/"
+metadata_dir = "/home/jgarcia/datasets/CXR_Datasets/CheXpert-v1.0-small/"
 chx_data_index = CheXpert().get_labels(os.path.join(metadata_dir, "train.csv"))  #, 223422)
 
 ## Write the custom dataframe
@@ -76,8 +76,8 @@ valid_df.to_csv(os.path.join(dir_pp_index, "chx_valid_set.csv"), index=False)
 ######################################################################
 ## DNN training
 ## step-1: Load the chest x-rays images in jpg
-images_folder = "/data/01_UB/CXR_Datasets/"
-# images_folder = "/home/jgarcia/datasets/CXR_Datasets"
+#images_folder = "/data/01_UB/CXR_Datasets/"
+images_folder = "/home/jgarcia/datasets/CXR_Datasets"
 train_set = Utils().image_loader(images_folder, train)
 valid_set = Utils().image_loader(images_folder, valid)
 
