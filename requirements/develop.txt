@@ -1,0 +1,8 @@
+tensorflow-gpu==1.15    # https://pypi.org/project/tensorflow-gpu/1.15.0/
+keras==2.2.4            # https://pypi.org/project/keras/2.4.2/
+pandas==1.1.5           # https://pypi.org/project/pandas/1.1.5/
+matplotlib==3.3.4       # https://pypi.org/project/matplotlib/3.3.4/
+sklearn                 # https://pypi.org/project/sklearn/
+opencv-python==4.5.1.48 # https://pypi.org/project/opencv-python/4.5.1.48/
+cv2-tools==2.4.0        # https://pypi.org/project/cv2-tools/2.4.0/
+h5py==2.10.0            # https://pypi.org/project/h5py/2.10.0/
