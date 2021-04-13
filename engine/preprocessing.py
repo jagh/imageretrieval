@@ -75,6 +75,33 @@ class CheXpert:
 
 
 
+
+
+class MIMICCXR:
+        """ Module for preprocessing MIMIC-CHX Dataset """
+
+        def __init__(self):
+            self.mimichx_data_index = []
+
+
+        ## Convert DICOM images into PNG
+        def dicom_2_png(self, dataset_path, metadata_name, downsampling_path):
+            """
+            dicom to png converter
+            """
+            dicom_metadata = pd.read_csv(str(dataset_path+metadata_name), sep=",", header=0)
+            print("++ Metadata: {}".format(dicom_metadata.shape))
+
+            for dcm in dicom_metadata["patientId"]:
+                ## Read dicom image and covert pixels into a numpy array
+                ds = dcmread(str(dataset_path+"/stage_2_train_images/"+dcm+".dcm"))
+                windowed = apply_voi_lut(ds.pixel_array, ds)
+                ## Write the image converted
+                cv2.imwrite(os.path.join(downsampling_path, str(dcm+".png")), windowed)
+
+
+
+
 # ###################################################################
 # ## Launcher for CheXpert dataset
 # ###################################################################
