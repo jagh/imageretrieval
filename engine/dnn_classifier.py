@@ -1,5 +1,5 @@
 
-
+import os
 import collections
 import tensorflow as tf
 import keras.utils
@@ -57,7 +57,7 @@ class DenseNET121:
 
         return model
 
-    def fit_model(self, train_set, valid_set, epochs=2, batch_size=32):
+    def fit_model(self, train_set, valid_set, dir_dnn_train, epochs=2, batch_size=32):
         """ Training the model """
 
         train_aug, valid_aug = self.baseline_image_aumentation()
@@ -71,5 +71,5 @@ class DenseNET121:
                     validation_data=valid_aug.flow(valid_set.imgs, valid_set.labels),
                     validation_steps=len(valid_set.imgs)/batch_size,
                     )
-        # model.save_weights('cnn_weights.h5')
+        model.save_weights(os.path.join(dir_dnn_train, 'cxp_densenet161_weights.h5'))
         return history, model

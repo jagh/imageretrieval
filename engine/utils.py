@@ -15,7 +15,14 @@ class Utils:
     def __init__(self):
         pass
 
-    # def image_loader(self, data_index):
+    def make_dir(directory, sandbox = None) -> str:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        if not sandbox:
+            return str(directory)
+        path = os.popen('cd').readline()
+        return str(path+"/"+directory)
+
     def image_loader(self, images_folder, data_index, img_width = 224, img_height = 224):
         """ Loading the chest X-ray image and applied interpolation.
             data_index: receives a collection with format ('DataIndex', 'name img_paths labels').
