@@ -82,5 +82,5 @@ train_set = Utils().image_loader(images_folder, train)
 valid_set = Utils().image_loader(images_folder, valid)
 
 ## step-2: training the model
-history, model = DenseNET121().fit_model(train_set, valid_set, dir_dnn_train)
+history, model = DenseNET121().fit_model(train_set, valid_set, dir_dnn_train, 2)
 displayLearningCurves(history)
