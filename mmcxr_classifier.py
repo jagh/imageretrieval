@@ -37,6 +37,16 @@ def displayLearningCurves(history):
     plt.savefig(os.path.join(dir_dnn_train, "loss.png"))
     plt.close()
 
+    plt.figure(3)
+    plt.plot(history.history['auroc'])
+    plt.plot(history.history['val_auroc'])
+    plt.title('model aucroc')
+    plt.ylabel('aucroc')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'val'], loc='upper left')
+    plt.savefig(os.path.join(dir_dnn_train, "aucroc.png"))
+    plt.close()
+
 
 #######################################################################
 ## Workflow Launcher settings
@@ -110,7 +120,8 @@ train_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_train_set.csv"))
 valid_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_valid_set.csv"))
 
 ## Datasplit instances
-num_samples = 256
+# num_samples = 256
+num_samples = 64
 train = DataIndex(name='train', img_paths=train_df["img_path"][:num_samples],
                 labels=train_df["label"][:num_samples], labels_name=train_df["label"][:num_samples])
 valid = DataIndex(name='valid', img_paths=valid_df["img_path"], labels=valid_df["label"],
@@ -128,5 +139,5 @@ train_set = Utils().image_loader(images_folder, train)
 valid_set = Utils().image_loader(images_folder, valid)
 
 
-history, model = DenseNET121().fit_binary_model(train_set, valid_set, dir_dnn_train, 5)
+history, model = DenseNET121().fit_binary_model(train_set, valid_set, dir_dnn_train, 2, 32)
 displayLearningCurves(history)

@@ -1,5 +1,6 @@
 
 import os
+import pickle
 import collections
 import tensorflow as tf
 import keras.utils
@@ -99,6 +100,7 @@ class DenseNET121:
             return tf.py_func(roc_auc_score, (y_true, y_pred), tf.double)
 
         model.compile(optimizer='adadelta', loss=losses.binary_crossentropy, metrics=['accuracy', auroc])
+        # model.compile(optimizer='adadelta', loss=losses.binary_crossentropy, metrics=['accuracy'])
 
         return model
 
@@ -120,7 +122,11 @@ class DenseNET121:
 
         ## Training model
         # history = model.fit_generator(train_set.imgs, train_set.labels, epochs=epochs, verbose=1)
-        history = model.fit(train_set.imgs, train_set.labels, batch_size=batch_size, epochs=epochs)
+        history = model.fit(train_set.imgs, train_set.labels, batch_size=batch_size, epochs=epochs,
+                                validation_data=(valid_set.imgs, valid_set.labels))
 
         model.save_weights(os.path.join(dir_dnn_train, 'DenseNet161-MMCXR_weights.h5'))
+        with open(os.path.join(dir_dnn_train, 'DenseNet161-MMCXR_train_HistoryDict'), 'wb') as history_file:
+            pickle.dump(history.history, history_file)
+
         return history, model
