@@ -87,6 +87,47 @@ class MIMICCXR:
             self.mimichx_data_index = []
 
 
+        def read_mimic_IDs(self, dataset_index_path):
+            train_index = pd.read_pickle(os.path.join(dataset_index_path, "Train_ids.pickle"))
+            valid_index = pd.read_pickle(os.path.join(dataset_index_path, "Val_ids.pickle"))
+            test_index = pd.read_pickle(os.path.join(dataset_index_path, "Test_ids.pickle"))
+
+            ## Convert each index list as DataFrame
+            train_df_index = pd.DataFrame()
+            train_df_index["dicom_id"] = train_index
+            train_df_index["split_W"] = "train"
+            train_df_index["id_dicom"] = train_index
+
+            valid_df_index = pd.DataFrame()
+            valid_df_index["dicom_id"] = valid_index
+            valid_df_index["split_W"] = "valid"
+            valid_df_index["id_dicom"] = valid_index
+
+            test_df_index = pd.DataFrame()
+            test_df_index["dicom_id"] = test_index
+            test_df_index["split_W"] = "test"
+            test_df_index["id_dicom"] = test_index
+
+            ## Concatenate the dataframe sets
+            metadata_index = pd.concat([train_df_index, valid_df_index, test_df_index])
+            return metadata_index
+
+
+        def join_mimic_dataframes(self, mimic_index_data, metadata_subset):
+            mimic_metadata_subset = metadata_subset.set_index('dicom_id').join(mimic_index_data.set_index('dicom_id'))
+            mimic_metadata_subset["id_study"] = mimic_metadata_subset["study_id"]
+            mimic_metadata_subset["id_subject"] = mimic_metadata_subset["subject_id"]
+            mimic_metadata_subset.pop("subject_id")
+            return mimic_metadata_subset
+            
+
+        def join_mimic_labels(self, mimic_metadata_subset, label_index_data, mimic_label_file_name):
+            mimic_subset_label_data = mimic_metadata_subset.set_index('study_id').join(label_index_data.set_index('study_id'))
+            mimic_subset_label_data.to_csv(mimic_label_file_name, index=False)
+            return mimic_subset_label_data
+
+
+
         ## Convert DICOM images into PNG
         def dicom_2_png(self, dataset_path, metadata_name, downsampling_path):
             """
