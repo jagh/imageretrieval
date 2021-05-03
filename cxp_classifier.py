@@ -38,7 +38,7 @@ def displayLearningCurves(history):
 ## Workflow Launcher settings
 #######################################################################
 ## Set experiment sandbox folders
-dataset_name = "chexpert-exp1"
+dataset_name = "chexpert-exp2"
 
 
 ######################################################################
@@ -53,7 +53,7 @@ dir_dnn_train = Utils.make_dir(sandbox + "/02-training/")
 # step-1: Get labels from CheXpert dataset
 #metadata_dir = "/data/01_UB/CXR_Datasets/CheXpert-v1.0-small/"
 metadata_dir = "/home/jgarcia/datasets/CXR_Datasets/CheXpert-v1.0-small/"
-chx_data_index = CheXpert().get_labels(os.path.join(metadata_dir, "train.csv"))  #, 223422)
+chx_data_index = CheXpert().get_labels(os.path.join(metadata_dir, "train.csv"), 6000)    #223422)
 
 ## Write the custom dataframe
 chx_dataframe = pd.DataFrame(chx_data_index, columns=["img_path", "label"])
