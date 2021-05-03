@@ -1,5 +1,6 @@
 
 import os
+import pickle
 import collections
 import tensorflow as tf
 import keras.utils
@@ -11,7 +12,9 @@ from keras.layers import Input, Flatten
 from keras.layers import Activation, Dropout, Flatten, Dense
 from keras.layers.pooling import GlobalAveragePooling2D, AveragePooling2D
 from keras.models import Model
+from keras import losses
 from keras.optimizers import Adam
+from sklearn.metrics import roc_auc_score
 
 from keras.applications.densenet import DenseNet121, preprocess_input
 
@@ -83,4 +86,47 @@ class DenseNET121:
                     validation_steps=len(valid_set.imgs)/batch_size,
                     )
         model.save_weights(os.path.join(dir_dnn_train, 'DenseNet161-CXP_weights.h5'))
+        return history, model
+
+
+    def set_binary_model(self):
+        """ Transfer knowledge from DenseNet121 trained on ImageNet """
+
+        dense_model = DenseNet121(include_top=True, weights='imagenet', input_shape=(224,224,3))
+        output = Dense(1, activation='sigmoid', name='clf')(dense_model.layers[-2].output)
+        model = Model(inputs=dense_model.input, outputs=output)
+
+        def auroc(y_true, y_pred):
+            return tf.py_func(roc_auc_score, (y_true, y_pred), tf.double)
+
+        model.compile(optimizer='adadelta', loss=losses.binary_crossentropy, metrics=['accuracy', auroc])
+        # model.compile(optimizer='adadelta', loss=losses.binary_crossentropy, metrics=['accuracy'])
+
+        return model
+
+    def fit_binary_model(self, train_set, valid_set, dir_dnn_train, epochs=5, batch_size=32):
+        """ Training the model
+            https://www.geeksforgeeks.org/keras-fit-and-keras-fit_generator/"""
+
+        # train_aug, valid_aug = self.baseline_image_aumentation()
+        model = self.set_binary_model()
+
+        # ## Training model
+        # history = model.fit_generator(
+        #     train_aug.flow(train_set.imgs, train_set.labels, batch_size=batch_size),
+        #             steps_per_epoch=len(train_set.imgs)/batch_size,    #len(train_x)/batch_size,
+        #             epochs=epochs,
+        #             validation_data=valid_aug.flow(valid_set.imgs, valid_set.labels),
+        #             validation_steps=len(valid_set.imgs)/batch_size,
+        #             )
+
+        ## Training model
+        # history = model.fit_generator(train_set.imgs, train_set.labels, epochs=epochs, verbose=1)
+        history = model.fit(train_set.imgs, train_set.labels, batch_size=batch_size, epochs=epochs,
+                                validation_data=(valid_set.imgs, valid_set.labels))
+
+        model.save_weights(os.path.join(dir_dnn_train, 'DenseNet161-MMCXR_weights.h5'))
+        with open(os.path.join(dir_dnn_train, 'DenseNet161-MMCXR_train_HistoryDict'), 'wb') as history_file:
+            pickle.dump(history.history, history_file)
+
         return history, model

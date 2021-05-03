@@ -1,6 +1,6 @@
 
 
-import os
+import os, pickle
 import cv2
 import collections
 import numpy as np
