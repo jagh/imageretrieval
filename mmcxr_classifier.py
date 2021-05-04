@@ -9,47 +9,7 @@ import matplotlib.pyplot as plt
 from engine.utils import Utils
 from engine.preprocessing import MIMICCXR
 from engine.dnn_classifier import DenseNET121
-
-
-
-def displayLearningCurves(history):
-    ## Saving the convergence curves
-    # print(history.history.keys())
-    ## Accuracy plot
-    plt.figure(1)
-    # plt.plot(history.history['acc'])
-    plt.plot(history['acc'], '.-', color="darkturquoise")
-    plt.plot(history['val_acc'], '.-', color="mediumpurple", label="Validation score")
-    # plt.title('model accuracy')
-    plt.ylabel('Accuracy')
-    plt.xlabel('Epochs')
-    plt.ylim([0, 1])
-    plt.legend(['train', 'val'], loc='lower right')
-    plt.savefig(os.path.join(dir_dnn_train, "postpro_accuracy.png"))
-    plt.close()
-
-    ## Loss plot
-    plt.figure(2)
-    plt.plot(history['loss'], '.-', color="darkturquoise")
-    plt.plot(history['val_loss'], '.-', color="mediumpurple", label="Validation score")
-    # plt.title('model loss')
-    plt.ylabel('Loss (B. Crossentropy)')
-    plt.xlabel('Epochs')
-    plt.ylim([0, 2])
-    plt.legend(['train', 'val'], loc='upper left')
-    plt.savefig(os.path.join(dir_dnn_train, "postpro_loss.png"))
-    plt.close()
-
-    plt.figure(3)
-    plt.plot(history['auroc'], '.-', color="darkturquoise")
-    plt.plot(history['val_auroc'], '.-', color="mediumpurple", label="Validation score")
-    # plt.title('model aucroc')
-    plt.ylabel('ROC AUC')
-    plt.xlabel('Epochs')
-    plt.ylim([0, 1])
-    plt.legend(['train', 'val'], loc='lower right')
-    plt.savefig(os.path.join(dir_dnn_train, "postpro_aucroc.png"))
-    plt.close()
+from engine.metrics import MetricsDisplay
 
 
 #######################################################################
@@ -144,143 +104,40 @@ dir_dnn_train = Utils.make_dir(sandbox + "/02-training/")
 #
 #
 # history, model = DenseNET121().fit_binary_model(train_set, valid_set, dir_dnn_train, 2, 32)
-# displayLearningCurves(history)
 
 
 #########################################################################
-# ## Plot learning displayLearningCurve
-# history_file = os.path.join(dir_dnn_train, "DenseNet161-MMCXR_train_HistoryDict")
-# history_dict = pd.read_pickle(history_file)
-# history = pd.DataFrame.from_dict(history_dict)
-# # print("history", history)
-# # print("history", history['acc'])
-# print("history", history.shape)
-#
-# displayLearningCurves(history)
+## Plot learning displayLearningCurve
+history_file = os.path.join(dir_dnn_train, "DenseNet161-MMCXR_train_HistoryDict")
+history_dict = pd.read_pickle(history_file)
+history = pd.DataFrame.from_dict(history_dict)
+
+acc_filename = os.path.join(dir_dnn_train, "postpro_accuracy.png")
+MetricsDisplay().plot_accuracy(history, filename=acc_filename)
+
+loss_filename = os.path.join(dir_dnn_train, "postpro_loss.png")
+MetricsDisplay().plot_loss(history, filename=loss_filename)
+
+auc_filename = os.path.join(dir_dnn_train, "postpro_aucroc.png")
+MetricsDisplay().plot_aucroc(history, filename=auc_filename)
 
 
 
 #########################################################################
-## Load model and test
-from keras.models import load_model
-import numpy as np
-from sklearn.metrics import plot_confusion_matrix
-
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import f1_score, precision_recall_fscore_support
-
-
-## step 1: read train and valid sets
-DataIndex = collections.namedtuple('DataIndex', 'name img_paths labels labels_name')
+## DNN Evaluation
+## read test index file
 test_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_test_set-small.csv"))
 # test_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_test_set.csv"))
 
-## Datasplit instances
-test = DataIndex(name='test', img_paths=test_df["img_path"][:], labels=test_df["label"][:],
-                                        labels_name=test_df["label"][:])
-# print("test_df: ", test_df["img_path"].shape)
-# print("test_df: ", test_df["label"].shape)
-# print("valid_df: ", valid_df["img_path"].shape)
-# print("valid_df: ", valid_df["label"].shape)
-
-# step-2: Load the chest x-rays images in jpg
+## Load the mimic-cxr images in jpg
 images_folder = "/data/01_UB/CXR_Datasets/mimic-cxr-jpg/"
-test_set = Utils().image_loader(images_folder, test)
 
-## Step-3: Load the weights of the model
+## Load the model weights
 weights_file = os.path.join(dir_dnn_train, "DenseNet161-MMCXR_weights.h5")
-# print("+ Weights file", weights_file)
 
-## Get reference model from dnn_classifier class and load the weights
-model = DenseNET121().set_binary_model()
-model.load_weights(weights_file)
+## Predict the test values and compute the confusion matrix
+cm = DenseNET121().model_evaluation(test_df, images_folder, weights_file)
 
-score = model.evaluate(test_set.imgs, test_set.labels, verbose=1)
-print('+ Test loss:', score[0])
-print('+ Test accuracy:', score[1])
-
-
-## Model Prediction
-predictions = model.predict(test_set.imgs)
-# print("+ test predictions", predictions)
-
-## Normalizing labels prediec
-# predictions = predictions.astype(np.float)
-predictions = predictions.astype(np.int)
-print("+ test predictions", predictions.ravel().tolist())
-print("+ test_set labels:", test_set.labels)
-
-
-## Compute confusion_matrix
-# labels = ["Positive", "Negative"]
-conf_matrix = confusion_matrix(test_set.labels, predictions)
-print("+ Conf. matrix: \n", conf_matrix)
-
-
-######################################################3
-# ## Plot the the confusion matrix by model selected
-import matplotlib.pyplot as plt
-from itertools import product
-
-# if ax is None:
-#     fig, ax = plt.subplots()
-# else:
-#     fig = ax.figure
-
-fig, ax = plt.subplots()
-
-cm = confusion_matrix(test_set.labels, predictions)
-n_classes = 2
-cmap = plt.cm.Blues     #'viridis'
-text_ = None
-include_values = True
-values_format = None
-display_labels = None
-colorbar = True
-xticks_rotation = 'horizontal'
-
-im_ = ax.imshow(cm, interpolation='nearest', cmap=cmap)
-cmap_min, cmap_max = im_.cmap(0), im_.cmap(256)
-
-
-if include_values:
-    text_ = np.empty_like(cm, dtype=object)
-
-    # print text with appropriate color depending on background
-    thresh = (cm.max() + cm.min()) / 2.0
-
-    for i, j in product(range(n_classes), range(n_classes)):
-        color = cmap_max if cm[i, j] < thresh else cmap_min
-
-        if values_format is None:
-            text_cm = format(cm[i, j], '.2g')
-            if cm.dtype.kind != 'f':
-                text_d = format(cm[i, j], 'd')
-                if len(text_d) < len(text_cm):
-                    text_cm = text_d
-        else:
-            text_cm = format(cm[i, j], values_format)
-
-        text_[i, j] = ax.text(
-                            j, i, text_cm,
-                            ha="center", va="center",
-                            color=color)
-
-if display_labels is None:
-    display_labels = np.arange(n_classes)
-else:
-    display_labels = display_labels
-if colorbar:
-    fig.colorbar(im_, ax=ax)
-ax.set(xticks=np.arange(n_classes),
-            yticks=np.arange(n_classes),
-            xticklabels=display_labels,
-            yticklabels=display_labels,
-            ylabel="True label",
-            xlabel="Predicted label")
-
-ax.set_ylim((n_classes - 0.5, -0.5))
-plt.setp(ax.get_xticklabels(), rotation=xticks_rotation)
-plt.savefig(os.path.join(dir_dnn_train, "postpro_cm.png"))
-
-plt.close()
+## Plot and save the confusion matrix
+cm_filename = os.path.join(dir_dnn_train, "postpro_cm.png")
+MetricsDisplay().plot_confusion_matrix(cm, filename=cm_filename)

@@ -2,6 +2,7 @@
 import os
 import pickle
 import collections
+import numpy as np
 import tensorflow as tf
 import keras.utils
 from keras.preprocessing.image import ImageDataGenerator, load_img
@@ -17,6 +18,9 @@ from keras.optimizers import Adam
 from sklearn.metrics import roc_auc_score
 
 from keras.applications.densenet import DenseNet121, preprocess_input
+
+from sklearn.metrics import confusion_matrix
+from engine.utils import Utils
 
 Dataset = collections.namedtuple('Dataset', 'name imgs labels')
 
@@ -120,3 +124,36 @@ class DenseNET121:
             pickle.dump(history.history, history_file)
 
         return history, model
+
+
+
+    def model_evaluation(self, test_df, images_folder, weights_file):
+        ## Datasplit instances
+        DataIndex = collections.namedtuple('DataIndex', 'name img_paths labels labels_name')
+        test = DataIndex(name='test', img_paths=test_df["img_path"][:], labels=test_df["label"][:],
+                                                labels_name=test_df["label"][:])
+
+        test_set = Utils().image_loader(images_folder, test)
+
+        ## Get reference model from dnn_classifier class and load the weights
+        model = DenseNET121().set_binary_model()
+        model.load_weights(weights_file)
+
+        score = model.evaluate(test_set.imgs, test_set.labels, verbose=1)
+        print('+ Test Loss:', score[0])
+        print('+ Test Acc:', score[1])
+
+        ## Model Prediction
+        predictions = model.predict(test_set.imgs)
+
+        ## Normalizing labels prediec
+        # predictions = predictions.astype(np.float)
+        predictions = predictions.astype(np.int)
+        # print("+ test predictions", predictions.ravel().tolist())
+        # print("+ test_set labels:", test_set.labels)
+
+        ## Compute confusion_matrix
+        cm = confusion_matrix(test_set.labels, predictions)
+        print("+ CM: \n", cm)
+
+        return cm
