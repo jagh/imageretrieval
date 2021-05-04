@@ -101,8 +101,8 @@ class DenseNET121:
 
         model.compile(optimizer='adadelta', loss=losses.binary_crossentropy, metrics=['accuracy', auroc])
         # model.compile(optimizer='adadelta', loss=losses.binary_crossentropy, metrics=['accuracy'])
-
         return model
+
 
     def fit_binary_model(self, train_set, valid_set, dir_dnn_train, epochs=5, batch_size=32):
         """ Training the model
@@ -111,21 +111,11 @@ class DenseNET121:
         # train_aug, valid_aug = self.baseline_image_aumentation()
         model = self.set_binary_model()
 
-        # ## Training model
-        # history = model.fit_generator(
-        #     train_aug.flow(train_set.imgs, train_set.labels, batch_size=batch_size),
-        #             steps_per_epoch=len(train_set.imgs)/batch_size,    #len(train_x)/batch_size,
-        #             epochs=epochs,
-        #             validation_data=valid_aug.flow(valid_set.imgs, valid_set.labels),
-        #             validation_steps=len(valid_set.imgs)/batch_size,
-        #             )
-
         ## Training model
-        # history = model.fit_generator(train_set.imgs, train_set.labels, epochs=epochs, verbose=1)
         history = model.fit(train_set.imgs, train_set.labels, batch_size=batch_size, epochs=epochs,
                                 validation_data=(valid_set.imgs, valid_set.labels))
-
         model.save_weights(os.path.join(dir_dnn_train, 'DenseNet161-MMCXR_weights.h5'))
+
         with open(os.path.join(dir_dnn_train, 'DenseNet161-MMCXR_train_HistoryDict'), 'wb') as history_file:
             pickle.dump(history.history, history_file)
 
