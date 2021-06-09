@@ -26,7 +26,7 @@ Dataset = collections.namedtuple('Dataset', 'name imgs labels')
 
 ## GPU environment flag
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="6"
+os.environ["CUDA_VISIBLE_DEVICES"]="5"
 
 ## prevent OOM issues
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
