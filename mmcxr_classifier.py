@@ -1,4 +1,7 @@
-""" Script to classify some conditions from MIMIC-CXR dataset """
+"""
+    Script to classify some conditions from MIMIC-CXR dataset
+    Nerve launcher script: nohup python mmcxr_classifier.py > mmcxr_nerve_exp-3.log &
+"""
 
 import os
 from glob import glob
@@ -16,7 +19,7 @@ from engine.metrics import MetricsDisplay
 ## Workflow Launcher settings
 #######################################################################
 ## Set experiment sandbox folders
-dataset_name = "mimiccxr-nerve_exp2"
+dataset_name = "mimiccxr-exp3"
 
 
 ######################################################################
@@ -74,36 +77,35 @@ dir_dnn_train = Utils.make_dir(sandbox + "/02-training/")
 # print("+ vaid_df", valid_df.shape)
 # print("+ test_df", test_df.shape)
 
-# ######################################################################
-# ## DNN training
-#
-# ## step 1: read train and valid sets
-# DataIndex = collections.namedtuple('DataIndex', 'name img_paths labels labels_name')
-#
-# train_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_train_set.csv"))
-# valid_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_valid_set.csv"))
-#
-# ## Datasplit instances
-# # num_samples = 256
-# num_samples = 64
-# train = DataIndex(name='train', img_paths=train_df["img_path"][:num_samples],
-#                 labels=train_df["label"][:num_samples], labels_name=train_df["label"][:num_samples])
-# valid = DataIndex(name='valid', img_paths=valid_df["img_path"], labels=valid_df["label"],
-#                                                 labels_name=valid_df["label"])
-#
-# # print("train_df: ", train_df["img_path"].shape)
-# # print("train_df: ", train_df["label"].shape)
-# # print("valid_df: ", valid_df["img_path"].shape)
-# # print("valid_df: ", valid_df["label"].shape)
-#
-#
-# ## step-2: Load the chest x-rays images in jpg
-# images_folder = "/data/01_UB/CXR_Datasets/mimic-cxr-jpg/"
-# train_set = Utils().image_loader(images_folder, train)
-# valid_set = Utils().image_loader(images_folder, valid)
-#
-#
-# history, model = DenseNET121().fit_binary_model(train_set, valid_set, dir_dnn_train, 2, 32)
+######################################################################
+## DNN training
+
+## step 1: read train and valid sets
+DataIndex = collections.namedtuple('DataIndex', 'name img_paths labels labels_name')
+
+train_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_train_set.csv"))
+valid_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_valid_set.csv"))
+
+## Datasplit instances
+#num_samples = 256
+num_samples = 64
+train = DataIndex(name='train', img_paths=train_df["img_path"][:num_samples],
+                 labels=train_df["label"][:num_samples], labels_name=train_df["label"][:num_samples])
+valid = DataIndex(name='valid', img_paths=valid_df["img_path"], labels=valid_df["label"],
+                                                 labels_name=valid_df["label"])
+
+# print("train_df: ", train_df["img_path"].shape)
+# print("train_df: ", train_df["label"].shape)
+# print("valid_df: ", valid_df["img_path"].shape)
+# print("valid_df: ", valid_df["label"].shape)
+
+
+## step-2: Load the chest x-rays images in jpg
+images_folder = "/data/01_UB/CXR_Datasets/mimic-cxr-jpg/"
+train_set = Utils().image_loader(images_folder, train)
+valid_set = Utils().image_loader(images_folder, valid)
+
+history, model = DenseNET121().fit_binary_model(train_set, valid_set, dir_dnn_train, 2, 32)
 
 
 #########################################################################
@@ -126,11 +128,12 @@ MetricsDisplay().plot_aucroc(history, filename=auc_filename)
 #########################################################################
 ## DNN Evaluation
 ## read test index file
-test_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_test_set-small.csv"))
-# test_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_test_set.csv"))
+# test_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_test_set-small.csv"))
+test_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_test_set.csv"))
 
 ## Load the mimic-cxr images in jpg
-images_folder = "/data/01_UB/CXR_Datasets/mimic-cxr-jpg/"
+# images_folder = "/data/01_UB/CXR_Datasets/mimic-cxr-jpg/"
+images_folder = "/home/jgarcia/datasets/physionet.org/files/mimic-cxr-jpg/2.0.0/"
 
 ## Load the model weights
 weights_file = os.path.join(dir_dnn_train, "DenseNet161-MMCXR_weights.h5")
