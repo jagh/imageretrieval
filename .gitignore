@@ -7,3 +7,6 @@ innvestigate/
 ## Others
 __pycache__/
 engine/__pycache__
+
+## Experiment logs
+*.log
