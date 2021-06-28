@@ -41,13 +41,19 @@ class DenseNET121:
     def __init__(self):
         pass
 
+    def image_preprocessing(self, img):
+        img = preprocess_input(img)
+        return img
+
     def baseline_image_aumentation(self):
         """ Image augmentation and transformations """
-        train_aug = ImageDataGenerator(
-                                        rescale=1. / 255,
-                                        shear_range=0.2,
-                                        zoom_range=0.2,
-                                        horizontal_flip=True)
+        train_aug = ImageDataGenerator(rotation_range=5,
+                                        width_shift_range=0.05,
+                                        height_shift_range=0.1,
+                                        shear_range=0,
+                                        zoom_range=0,
+                                        horizontal_flip=False,
+                                        preprocessing_function=self.image_preprocessing)
 
         valid_aug = ImageDataGenerator(rescale=1. / 255)
 
@@ -91,7 +97,6 @@ class DenseNET121:
         model.save_weights(os.path.join(dir_dnn_train, 'DenseNet161-CXP_weights.h5'))
         return history, model
 
-
     def set_binary_model(self):
         """ Transfer knowledge from DenseNet121 trained on ImageNet """
 
@@ -106,18 +111,29 @@ class DenseNET121:
         # model.compile(optimizer='adadelta', loss=losses.binary_crossentropy, metrics=['accuracy'])
         return model
 
-
     def fit_binary_model(self, train_set, valid_set, dir_dnn_train, epochs=5, batch_size=32):
         """ Training the model
             https://www.geeksforgeeks.org/keras-fit-and-keras-fit_generator/"""
 
-        # train_aug, valid_aug = self.baseline_image_aumentation()
+        train_aug, valid_aug = self.baseline_image_aumentation()
         model = self.set_binary_model()
 
         ## Training model
-        history = model.fit(train_set.imgs, train_set.labels, batch_size=batch_size, epochs=epochs,
-                                validation_data=(valid_set.imgs, valid_set.labels))
-        model.save_weights(os.path.join(dir_dnn_train, 'DenseNet161-MMCXR_weights.h5'))
+        # history = model.fit(train_set.imgs, train_set.labels, batch_size=batch_size,
+        #                         epochs=epochs,
+        #                         validation_data=(valid_set.imgs, valid_set.labels)
+        #                         )
+
+        history = model.fit_generator(
+                    train_aug.flow(train_set.imgs, train_set.labels, batch_size=batch_size),
+                                    steps_per_epoch=len(train_set.imgs)/batch_size,    #len(train_x)/batch_size,
+                                    epochs=epochs,
+                    # validation_data=valid_aug.flow(valid_set.imgs, valid_set.labels),
+                    validation_data=(valid_set.imgs, valid_set.labels),
+                                validation_steps=len(valid_set.imgs)/batch_size,
+                    )
+
+        model.save_weights(os.path.join(dir_dnn_train, 'DenseNet161-MMCXR_train_HistoryDict'))
 
         with open(os.path.join(dir_dnn_train, 'DenseNet161-MMCXR_train_HistoryDict'), 'wb') as history_file:
             pickle.dump(history.history, history_file)
