@@ -42,8 +42,8 @@ class Utils:
                 labels_list.append(data_index.labels[i])
 
             except cv2.error:
-                cases_not_found.append((row))
-                print("!! Case not found ->", row)
+                cases_not_found.append((data_index.img_paths[i]))
+                print("!! Case not found ->", data_index.img_paths[i])
 
         ## Return a dataset instance
         return Dataset(name=data_index.name, imgs=np.array(imgs_list), labels=np.array(labels_list))
