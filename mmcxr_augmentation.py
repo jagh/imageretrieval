@@ -150,17 +150,24 @@ print("+ test_df", test_df.shape)
 
 
 ## Datasplit instances
-ns = 12245    ## num_samples
+ns = 256   #12245    ## num_samples
 train = DataIndex(name='train', img_paths=train_df["img_path"][:ns], labels=train_df["label"][:ns],
                                                 labels_name=train_df["label"][:ns])
 valid = DataIndex(name='valid', img_paths=valid_df["img_path"], labels=valid_df["label"],
                                                  labels_name=valid_df["label"])
 
 ## step-2: Load the chest x-rays images in jpg
+<<<<<<< HEAD
 # ## Desktop path
 # images_folder = "/data/01_UB/CXR_Datasets/mimic-cxr-jpg/"
 ## Server path
 images_folder = "/home/jgarcia/datasets/physionet.org/files/mimic-cxr-jpg/2.0.0/"
+=======
+## Desktop path
+images_folder = "/data/01_UB/CXR_Datasets/mimic-cxr-jpg/"
+# ## Server path
+# images_folder = "/home/jgarcia/datasets/physionet.org/files/mimic-cxr-jpg/2.0.0/"
+>>>>>>> 38b526eb9fbfc3dcc146ba4416cd6a2f56071dea
 train_raw = Utils().image_loader(images_folder, train)
 valid_raw = Utils().image_loader(images_folder, valid)
 print("+ train_raw: ", type(train_raw.imgs[0]))
@@ -204,7 +211,11 @@ print('+ random_noise_imgs: ', train_rnoise_imgs[0].shape)
 ## DNN training
 ## step 1: read train and valid sets
 ## step-2: Load the chest x-rays images in jpg
+<<<<<<< HEAD
 num_epochs = 100  ##num_samples
+=======
+num_epochs = 3  #30
+>>>>>>> 38b526eb9fbfc3dcc146ba4416cd6a2f56071dea
 batch_size = 32
 
 # ## Desktop path
