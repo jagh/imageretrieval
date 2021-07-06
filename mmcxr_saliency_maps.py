@@ -22,9 +22,9 @@ from engine.metrics import MetricsDisplay
 ## Workflow Launcher settings
 #######################################################################
 ## Set experiment sandbox folders
-# dataset_name = "mimiccxr_30epochs-T0"
+dataset_name = "mimiccxr-Debug"
 # dataset_name = "mimiccxr_30epochs-T1"
-dataset_name = "mimiccxr_30epochs-T2"
+# dataset_name = "mimiccxr_30epochs-T2"
 
 ######################################################################
 ## Step-0: Generate the output pipeline directories
@@ -132,76 +132,90 @@ dir_dnn_train = Utils.make_dir(sandbox + "/02-training/")
 
 
 
-# import torch
-# import torchio as tio
-#
-# import cv2
-# import matplotlib.pyplot as plt
-#
-# ######################################################################
-# ## Data augmentation
-#
-# # ## step 1: read train and valid sets
-# DataIndex = collections.namedtuple('DataIndex', 'name img_paths labels labels_name')
-# train_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_train_set.csv"))
-# valid_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_valid_set.csv"))
-# test_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_test_set.csv"))
-# print("+ train_df", train_df.shape)
-# print("+ valid_df", valid_df.shape)
-# print("+ test_df", test_df.shape)
-#
-#
-# ## Datasplit instances
-# ns = 256   #12245    ## num_samples
-# train = DataIndex(name='train', img_paths=train_df["img_path"][:ns], labels=train_df["label"][:ns],
-#                                                 labels_name=train_df["label"][:ns])
-# valid = DataIndex(name='valid', img_paths=valid_df["img_path"], labels=valid_df["label"],
-#                                                  labels_name=valid_df["label"])
-#
-# ## step-2: Load the chest x-rays images in jpg
-# # ## Desktop path
-# # images_folder = "/data/01_UB/CXR_Datasets/mimic-cxr-jpg/"
-# ## Server path
-# images_folder = "/home/jgarcia/datasets/physionet.org/files/mimic-cxr-jpg/2.0.0/"
-# train_raw = Utils().image_loader(images_folder, train)
-# valid_raw = Utils().image_loader(images_folder, valid)
+import torch
+import torchio as tio
+
+import cv2
+import matplotlib.pyplot as plt
+
+######################################################################
+## Data augmentation
+
+# ## step 1: read train and valid sets
+DataIndex = collections.namedtuple('DataIndex', 'name img_paths labels labels_name')
+train_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_train_set.csv"))
+valid_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_valid_set.csv"))
+test_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_test_set.csv"))
+print("+ train_df", train_df.shape)
+print("+ valid_df", valid_df.shape)
+print("+ test_df", test_df.shape)
+
+
+## Datasplit instances
+ns = 256   #12245    ## num_samples
+train = DataIndex(name='train', img_paths=train_df["img_path"][:ns], labels=train_df["label"][:ns],
+                                                labels_name=train_df["label"][:ns])
+valid = DataIndex(name='valid', img_paths=valid_df["img_path"], labels=valid_df["label"],
+                                                 labels_name=valid_df["label"])
+
+## step-2: Load the chest x-rays images in jpg
+# ## Desktop path
+# images_folder = "/data/01_UB/CXR_Datasets/mimic-cxr-jpg/"
+## Server path
+images_folder = "/home/jgarcia/datasets/physionet.org/files/mimic-cxr-jpg/2.0.0/"
+train_raw = Utils().image_loader(images_folder, train)
+valid_raw = Utils().image_loader(images_folder, valid)
 # print("+ train_raw: ", type(train_raw.imgs[0]))
 # print("+ train_raw: ", train_raw.imgs[0].shape)
-#
-#
-# # #######################################
-# # ## Transformation-1:
-# # # transform = tio.transforms.RandomNoise()
-# # intensity_transform = tio.RescaleIntensity(out_min_max=(-0.2, 1), percentiles=(1, 80))
-# # train_intst_imgs = intensity_transform(train_raw.imgs)
-# # valid_intst_imgs = intensity_transform(valid_raw.imgs)
-# # print('+ train_intst_imgs: ', type(train_intst_imgs[0]))
-# # print('+ train_intst_imgs: ', train_intst_imgs[0].shape)
-#
-# #######################################
-# ## Transformation-2:
-# random_noise_transform = tio.transforms.RandomBlur((0,0.8))
-# train_rnoise_imgs = random_noise_transform(train_raw.imgs)
-# valid_rnoise_imgs = random_noise_transform(valid_raw.imgs)
-# print('+ random_noise_imgs: ', type(train_rnoise_imgs[0]))
-# print('+ random_noise_imgs: ', train_rnoise_imgs[0].shape)
-#
-#
-# # #######################################
-# # ## Plotting fake vendors
-# # plot_list = [1, 2, 3]
-# # fig, axes = plt.subplots(1, 3)
-# # for i, slice in enumerate(plot_list):
-# #     if i == 0:
-# #         axes[0].imshow(train_set.imgs[1])   #, cmap="gray", origin="lower")
-# #     elif i == 1:
-# #         axes[1].imshow(train_intst_imgs[1])  #, cmap="gray", origin="lower")
-# #     else:
-# #         axes[2].imshow(train_rnoise_imgs[1])
-# # plt.show()
-#
-#
-#
+
+
+#######################################
+## Transformation-1:
+# transform = tio.transforms.RandomNoise()
+def rescaleIntensity(index):
+    params_rescaleIn = [(-0.27, 1), (-0.22, 1), (-0.17, 1), (-0.1, 1)]
+    # print("-- params_rescaleIn: ", params_rescaleIn[index])
+    intensity_transform = tio.RescaleIntensity(out_min_max=params_rescaleIn[index], percentiles=(0.5, 99.5)) #  (0, 1),
+    train_intst_imgs = intensity_transform(train_raw.imgs)
+    valid_intst_imgs = intensity_transform(valid_raw.imgs)
+    # print('+ train_intst_imgs: ', type(train_intst_imgs[0]))
+    # print('+ train_intst_imgs: ', train_intst_imgs[0].shape)
+    return train_intst_imgs, valid_intst_imgs
+
+
+#######################################
+## Transformation-2:
+def randomGaussianFilter(index):
+    params_noiseTr = [(0.25, 0.85), (0.50, 0.90), (0.75, 0.95), (1, 1)]
+    # print("-- params_noiseTr: ", params_noiseTr[3])
+    random_noise_transform = tio.transforms.RandomBlur(params_noiseTr[3])
+    train_rnoise_imgs = random_noise_transform(train_raw.imgs)
+    valid_rnoise_imgs = random_noise_transform(valid_raw.imgs)
+    # print('+ random_noise_imgs: ', type(train_rnoise_imgs[0]))
+    # print('+ random_noise_imgs: ', train_rnoise_imgs[0].shape)
+    return train_rnoise_imgs, valid_rnoise_imgs
+
+
+#######################################
+## Plotting fake vendors
+plot_list = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+img_index = 3
+fig, axes = plt.subplots(1, 9)
+for i, slice in enumerate(plot_list):
+    if i < 4:
+        train_intst_imgs, _ = rescaleIntensity(i)
+        axes[i].imshow(train_intst_imgs[img_index])
+    elif i == 4:
+        axes[i].imshow(train_raw.imgs[img_index])   #, cmap="gray", origin="lower")
+    elif i > 4:
+        train_rnoise_imgs, _ = randomGaussianFilter(i)
+        axes[i].imshow(train_rnoise_imgs[img_index])
+    else: pass
+
+plt.show()
+
+
+
 # ######################################################################
 # ## DNN training
 # ## step 1: read train and valid sets
@@ -271,90 +285,102 @@ dir_dnn_train = Utils.make_dir(sandbox + "/02-training/")
 
 
 
-import cv2
-import numpy as np
-import innvestigate
-import innvestigate.utils as iutils
-
-########################################################################
-## Interpretability visualization with saliency maps
-def load_images(paths, img_w=224, img_h=224):
-    # paths = glob(path)
-    # print('++ paths', paths)
-    for p in paths:
-        img = cv2.imread(p)
-        img_resize = cv2.resize(img, dsize=(img_w, img_h), interpolation=cv2.INTER_CUBIC)
-        yield np.expand_dims(img_resize, axis=0)
-
-def deepTaylorAnalyzer(img_expand, model):
-    analyzer = innvestigate.create_analyzer("deep_taylor", model)
-    analysis = analyzer.analyze(img_expand)
-
-    ## Aggregate along color channels and normalize to [-1, 1]
-    a = analysis.sum(axis=np.argmax(np.asarray(analysis.shape) == 3))
-    a /= np.max(np.abs(a))
-    return a
-
-def deepTaylor_SoftAnalyzer(img_expand, model):
-
-    ## Stripping the softmax activation from the model
-    model_wo_sm = iutils.keras.graph.model_wo_softmax(model)
-    # model_wo_sm = iutils.keras.graph.get_model_execution_graph(model, keep_input_layers=False)
-
-    ## Creating an analyzer
-    analyzer = innvestigate.create_analyzer("deep_taylor", model_wo_sm)
-
-    ## Applying the analyzer
-    analysis = analyzer.analyze(img_expand)
-
-    ## Aggregate along color channels and normalize to [-1, 1]
-    # a = analysis.sum(axis=np.argmax(np.asarray(analysis.shape) == 3))
-    # a /= np.max(np.abs(a))
-
-    # Handle input depending on model and backend.
-    channels_first = keras.backend.image_data_format() == "channels_first"
-    color_conversion = "BGRtoRGB"
-
-    # Apply common postprocessing, e.g., re-ordering the channels for plotting.
-    a = imgnetutils.postprocess(analysis, color_conversion, channels_first)
-    a = imgnetutils.heatmap(a)
-    return a
-
-
-
-## Set directory path
-dir_vi_samples = str(sandbox + "/03-visualization_samples")
-dir_output_sm = Utils.make_dir(sandbox + "/04-output_sailency_maps")
-# print('visualization_samples', visualization_samples)
-
-## Load the model weights
-weights_file = os.path.join(dir_dnn_train, "DenseNet161-MMCXR_weights.h5")
-model = DenseNET121().set_binary_model()
-model.load_weights(weights_file)
-
-
-## Displaying the gradient
-index = 0
-for img in load_images(glob(str(dir_vi_samples + "/*"))):
-    ## Using DeepTaylor method as analyzer
-    # img_analized = deepTaylor_SoftAnalyzer(img, model)
-    img_analized = deepTaylorAnalyzer(img, model)
-
-    # Displaying the gradient
-    plt.figure(str(index), figsize=(6, 6))
-    plt.axis('off')
-    plt.imshow(img_analized.squeeze(), cmap='seismic', clim=(-1, 1))
-    # plt.imshow(img_analized.squeeze(), cmap='seismic', interpolation='nearest')
-    # plt.imshow(img_analized.squeeze(), cmap='Spectral', clim=(-1, 1))
-    plt.tight_layout()
-    plt.savefig(str(dir_output_sm + '/' + str(index)+ "_sm.png"))
-    plt.close()
-
-    plt.figure(str(index+1), figsize=(6, 6))
-    plt.axis('off')
-    plt.imshow(img.squeeze(), cmap='gray', interpolation='nearest')
-    plt.tight_layout()
-    plt.savefig(str(dir_output_sm + '/' + str(index)+ "_cxr.png"))
-    plt.close()
-
-    index = index + 1
+# import cv2
+# import numpy as np
+# import innvestigate
+# import innvestigate.utils as iutils
+#
+# ########################################################################
+# ## Interpretability visualization with saliency maps
+# def load_images(paths, img_w=224, img_h=224):
+#     # paths = glob(path)
+#     # print('++ paths', paths)
+#     for p in paths:
+#         img = cv2.imread(p)
+#         img_resize = cv2.resize(img, dsize=(img_w, img_h), interpolation=cv2.INTER_CUBIC)
+#         yield np.expand_dims(img_resize, axis=0)
+#
+# def deepTaylorAnalyzer(img_expand, model):
+#     analyzer = innvestigate.create_analyzer("deep_taylor", model)
+#     analysis = analyzer.analyze(img_expand)
+#
+#     ## Aggregate along color channels and normalize to [-1, 1]
+#     a = analysis.sum(axis=np.argmax(np.asarray(analysis.shape) == 3))
+#     a /= np.max(np.abs(a))
+#     return a
+#
+# def deepTaylor_SoftAnalyzer(img_expand, model):
+#
+#     ## Stripping the softmax activation from the model
+#     model_wo_sm = iutils.keras.graph.model_wo_softmax(model)
+#     # model_wo_sm = iutils.keras.graph.get_model_execution_graph(model, keep_input_layers=False)
+#
+#     ## Creating an analyzer
+#     analyzer = innvestigate.create_analyzer("deep_taylor", model_wo_sm)
+#
+#     ## Applying the analyzer
+#     analysis = analyzer.analyze(img_expand)
+#
+#     ## Aggregate along color channels and normalize to [-1, 1]
+#     # a = analysis.sum(axis=np.argmax(np.asarray(analysis.shape) == 3))
+#     # a /= np.max(np.abs(a))
+#
+#     # Handle input depending on model and backend.
+#     channels_first = keras.backend.image_data_format() == "channels_first"
+#     color_conversion = "BGRtoRGB"
+#
+#     # Apply common postprocessing, e.g., re-ordering the channels for plotting.
+#     a = imgnetutils.postprocess(analysis, color_conversion, channels_first)
+#     a = imgnetutils.heatmap(a)
+#     return a
+#
+#
+#
+# ## Set directory path
+# dir_vi_samples = str(sandbox + "/03-visualization_samples")
+# dir_output_sm = Utils.make_dir(sandbox + "/04-output_sailency_maps")
+# # print('visualization_samples', visualization_samples)
+#
+# ## Load the model weights
+# weights_file = os.path.join(dir_dnn_train, "DenseNet161-MMCXR_weights.h5")
+# model = DenseNET121().set_binary_model()
+# model.load_weights(weights_file)
+#
+#
+# ## Displaying the gradient
+# index = 0
+# for img in load_images(glob(str(dir_vi_samples + "/*"))):
+#     ## Using DeepTaylor method as analyzer
+#     # img_analized = deepTaylor_SoftAnalyzer(img, model)
+#     img_analized = deepTaylorAnalyzer(img, model)
+#
+#     # Displaying the gradient
+#     plt.figure(str(index), figsize=(6, 6))
+#     plt.axis('off')
+#     # plt.imshow(img_analized.squeeze(), cmap='seismic', interpolation='nearest')
+#     # plt.imshow(img_analized.squeeze(), cmap='Spectral', clim=(-1, 1))
+#     plt.imshow(img.squeeze(), interpolation='none')
+#     plt.imshow(img_analized.squeeze(), interpolation='none',
+#                                     cmap='seismic', clim=(-1, 1))
+#     # plt.set_cmap("seismic")
+#     # plt.imshow(img_analized.squeeze(),
+#     #                 interpolation='none',
+#     #                 alpha=0.7)
+#
+#     plt.tight_layout()
+#     plt.savefig(str(dir_output_sm + '/' + str(index)+ "_sm.png"))
+#     plt.close()
+#
+#     ############################################################
+#     plt.figure(str(index+1), figsize=(6, 6))
+#     plt.axis('off')
+#     plt.imshow(img.squeeze(), interpolation='none')
+#     plt.imshow(img_analized.squeeze(),
+#                                 interpolation ='none',
+#                                 alpha = 0.3)
+#     # plt.set_cmap("gist_rainbow")
+#     plt.tight_layout()
+#     plt.savefig(str(dir_output_sm + '/' + str(index)+ "_cxr.png"))
+#     plt.close()
+#
+#     index = index + 1
