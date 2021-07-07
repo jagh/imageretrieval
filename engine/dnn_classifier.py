@@ -15,7 +15,7 @@ from keras.models import Model
 from keras import losses
 from keras.optimizers import Adam
 from sklearn.metrics import roc_auc_score
-
+from keras.callbacks import ModelCheckpoint
 from keras.applications.densenet import DenseNet121, preprocess_input
 
 from sklearn.metrics import confusion_matrix
@@ -55,7 +55,7 @@ class DenseNET121:
                                         horizontal_flip=False,
                                         preprocessing_function=self.image_preprocessing)
 
-        valid_aug = ImageDataGenerator(rescale=1. / 255)
+        valid_aug = ImageDataGenerator()    #rescale=1. / 255)
 
         return train_aug, valid_aug
 
@@ -107,8 +107,8 @@ class DenseNET121:
         def auroc(y_true, y_pred):
             return tf.py_func(roc_auc_score, (y_true, y_pred), tf.double)
 
-        #model.compile(optimizer='adadelta', loss=losses.binary_crossentropy, metrics=['accuracy', auroc])
-        model.compile(optimizer='adadelta', loss=losses.binary_crossentropy, metrics=['accuracy'])
+        model.compile(optimizer='adadelta', loss=losses.binary_crossentropy, metrics=['accuracy', auroc])
+        # model.compile(optimizer='adadelta', loss=losses.binary_crossentropy, metrics=['accuracy'])
         return model
 
     def fit_binary_model(self, train_set, valid_set, dir_dnn_train, epochs=5, batch_size=32):
@@ -118,21 +118,20 @@ class DenseNET121:
         train_aug, valid_aug = self.baseline_image_aumentation()
         model = self.set_binary_model()
 
+        checkpoint = ModelCheckpoint(os.path.join(dir_dnn_train, 'DenseNet161-MMCXR_weights.h5'),
+                                        monitor='val_f1',
+                                        save_best_only=True,
+                                        verbose=True, mode='max')
+
+
         ## Training model
-        # history = model.fit(train_set.imgs, train_set.labels, batch_size=batch_size,
-        #                         epochs=epochs,
-        #                         validation_data=(valid_set.imgs, valid_set.labels)
-        #                         )
+        history = model.fit(train_set.imgs, train_set.labels,
+                                batch_size=batch_size,
+                                epochs=epochs,
+                                validation_data=(valid_set.imgs, valid_set.labels)
+                                )
 
-        history = model.fit_generator(
-                    train_aug.flow(train_set.imgs, train_set.labels, batch_size=batch_size),
-                                    steps_per_epoch=len(train_set.imgs)/batch_size,    #len(train_x)/batch_size,
-                                    epochs=epochs,
-                    # validation_data=valid_aug.flow(valid_set.imgs, valid_set.labels),
-                    validation_data=(valid_set.imgs, valid_set.labels),
-                                validation_steps=len(valid_set.imgs)/batch_size,
-                    )
-
+        model.save(os.path.join(dir_dnn_train, 'DenseNet161-MMCXR_weights.h5'))
         model.save_weights(os.path.join(dir_dnn_train, 'DenseNet161-MMCXR_train_HistoryDict'))
 
         with open(os.path.join(dir_dnn_train, 'DenseNet161-MMCXR_train_HistoryDict'), 'wb') as history_file:
@@ -157,6 +156,7 @@ class DenseNET121:
         score = model.evaluate(test_set.imgs, test_set.labels, verbose=1)
         print('+ Test Loss:', score[0])
         print('+ Test Acc:', score[1])
+        # print('+ Test AUC:', score[2])
 
         ## Model Prediction
         predictions = model.predict(test_set.imgs)
