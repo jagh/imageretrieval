@@ -138,163 +138,163 @@ dir_dnn_train = Utils.make_dir(sandbox + "/02-training/")
 
 
 
-######################################################################
-## Data augmentation
-## step 1: read train and valid sets
-DataIndex = collections.namedtuple('DataIndex', 'name img_paths labels labels_name')
-train_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_train_set.csv"))
-valid_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_valid_set.csv"))
-test_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_test_set.csv"))
-print("+ train_df", train_df.shape)
-print("+ valid_df", valid_df.shape)
-print("+ test_df", test_df.shape)
+# ######################################################################
+# ## Data augmentation
+# ## step 1: read train and valid sets
+# DataIndex = collections.namedtuple('DataIndex', 'name img_paths labels labels_name')
+# train_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_train_set.csv"))
+# valid_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_valid_set.csv"))
+# test_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_test_set.csv"))
+# print("+ train_df", train_df.shape)
+# print("+ valid_df", valid_df.shape)
+# print("+ test_df", test_df.shape)
+#
+#
+# ## Datasplit instances
+# ns = 1024   #12245    ## num_samples
+# train = DataIndex(name='train', img_paths=train_df["img_path"][:ns], labels=train_df["label"][:ns],
+#                                                 labels_name=train_df["label"][:ns])
+# valid = DataIndex(name='valid', img_paths=valid_df["img_path"], labels=valid_df["label"],
+#                                                  labels_name=valid_df["label"])
+#
+# ## step-2: Load the chest x-rays images in jpg
+# # ## Desktop path
+# # images_folder = "/data/01_UB/CXR_Datasets/mimic-cxr-jpg/"
+# ## Server path
+# images_folder = "/home/jgarcia/datasets/physionet.org/files/mimic-cxr-jpg/2.0.0/"
+# train_raw = Utils().image_loader(images_folder, train)
+# valid_raw = Utils().image_loader(images_folder, valid)
+# # print("+ train_raw: ", type(train_raw.imgs[0]))
+# # print("+ train_raw: ", train_raw.imgs[0].shape)
+#
+# ## Call the augmentation
+# # train_intst_imgs = Augmenter().rescaleIntensity(train_raw.imgs)
+# # valid_intst_imgs = Augmenter().rescaleIntensity(valid_raw.imgs)
+# # train_rnoise_imgs = Augmenter().randomGaussianFilter(train_raw.imgs, 2)
+# # valid_rnoise_imgs = Augmenter().randomGaussianFilter(valid_raw.imgs, 2)
+# # Augmenter().plotting_fake_vendors(train_raw.imgs)
 
 
-## Datasplit instances
-ns = 1024   #12245    ## num_samples
-train = DataIndex(name='train', img_paths=train_df["img_path"][:ns], labels=train_df["label"][:ns],
-                                                labels_name=train_df["label"][:ns])
-valid = DataIndex(name='valid', img_paths=valid_df["img_path"], labels=valid_df["label"],
-                                                 labels_name=valid_df["label"])
-
-## step-2: Load the chest x-rays images in jpg
-# ## Desktop path
-# images_folder = "/data/01_UB/CXR_Datasets/mimic-cxr-jpg/"
-## Server path
-images_folder = "/home/jgarcia/datasets/physionet.org/files/mimic-cxr-jpg/2.0.0/"
-train_raw = Utils().image_loader(images_folder, train)
-valid_raw = Utils().image_loader(images_folder, valid)
-# print("+ train_raw: ", type(train_raw.imgs[0]))
-# print("+ train_raw: ", train_raw.imgs[0].shape)
-
-## Call the augmentation
-# train_intst_imgs = Augmenter().rescaleIntensity(train_raw.imgs)
-# valid_intst_imgs = Augmenter().rescaleIntensity(valid_raw.imgs)
-train_rnoise_imgs = Augmenter().randomGaussianFilter(train_raw.imgs, 2)
-valid_rnoise_imgs = Augmenter().randomGaussianFilter(valid_raw.imgs, 2)
-# Augmenter().plotting_fake_vendors(train_raw.imgs)
-
-
-######################################################################
-## DNN training
-## step 1: read train and valid sets
-## step-2: Load the chest x-rays images in jpg
-num_epochs = 5   #100  ##num_samples
-batch_size = 256    #32
-# learning_rate = 0.001
-# weight_decay = 0.0001
-
-# ## Desktop path
-# images_folder = "/data/01_UB/CXR_Datasets/mimic-cxr-jpg/"
-# # ## Server path
-# # images_folder = "/home/jgarcia/datasets/physionet.org/files/mimic-cxr-jpg/2.0.0/"
-
-
-Dataset = collections.namedtuple('Dataset', 'name imgs labels')
-
+# ######################################################################
+# ## DNN training
+# ## step 1: read train and valid sets
+# ## step-2: Load the chest x-rays images in jpg
+# num_epochs = 5   #100  ##num_samples
+# batch_size = 256    #32
+# # learning_rate = 0.001
+# # weight_decay = 0.0001
+#
+# # ## Desktop path
+# # images_folder = "/data/01_UB/CXR_Datasets/mimic-cxr-jpg/"
+# # # ## Server path
+# # # images_folder = "/home/jgarcia/datasets/physionet.org/files/mimic-cxr-jpg/2.0.0/"
+#
+#
+# Dataset = collections.namedtuple('Dataset', 'name imgs labels')
+#
 # ## Transformation-0:
 # train_set = Dataset(name=train_raw.name, imgs=train_raw.imgs, labels=train_raw.labels)
 # valid_set = Dataset(name=valid_raw.name, imgs=valid_raw.imgs, labels=valid_raw.labels)
-
-# ## Transformation-1:
-# train_set = Dataset(name=train_raw.name, imgs=train_intst_imgs, labels=train_raw.labels)
-# valid_set = Dataset(name=valid_raw.name, imgs=valid_intst_imgs, labels=valid_raw.labels)
-
-## Transformation-2:
-train_set = Dataset(name=train_raw.name, imgs=train_rnoise_imgs, labels=train_raw.labels)
-valid_set = Dataset(name=valid_raw.name, imgs=valid_rnoise_imgs, labels=valid_raw.labels)
-
-history, model = DenseNET121().fit_binary_model(train_set, valid_set, dir_dnn_train, num_epochs, batch_size)
-
-
-#########################################################################
-## Plot learning displayLearningCurve
-history_file = os.path.join(dir_dnn_train, "DenseNet161-MMCXR_train_HistoryDict")
-history_dict = pd.read_pickle(history_file)
-history = pd.DataFrame.from_dict(history_dict)
-
-acc_filename = os.path.join(dir_dnn_train, "postpro_accuracy.png")
-MetricsDisplay().plot_accuracy(history, filename=acc_filename)
-
-loss_filename = os.path.join(dir_dnn_train, "postpro_loss.png")
-MetricsDisplay().plot_loss(history, filename=loss_filename)
-
-auc_filename = os.path.join(dir_dnn_train, "postpro_aucroc.png")
-MetricsDisplay().plot_aucroc(history, filename=auc_filename)
-
-
-
-#########################################################################
-## DNN Evaluation
-## read test index file
-# test_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_test_set-small.csv"))
-test_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_test_set.csv"))
-
-## Load the mimic-cxr images in jpg
-images_folder = "/data/01_UB/CXR_Datasets/mimic-cxr-jpg/"
-# images_folder = "/home/jgarcia/datasets/physionet.org/files/mimic-cxr-jpg/2.0.0/"
-
-## Load the model weights
-weights_file = os.path.join(dir_dnn_train, "DenseNet161-MMCXR_weights.h5")
-
-## Predict the test values and compute the confusion matrix
-cm = DenseNET121().model_evaluation(test_df, images_folder, weights_file)
-
-## Plot and save the confusion matrix
-cm_filename = os.path.join(dir_dnn_train, "postpro_cm.png")
-MetricsDisplay().plot_confusion_matrix(cm, filename=cm_filename)
+#
+# # ## Transformation-1:
+# # train_set = Dataset(name=train_raw.name, imgs=train_intst_imgs, labels=train_raw.labels)
+# # valid_set = Dataset(name=valid_raw.name, imgs=valid_intst_imgs, labels=valid_raw.labels)
+#
+# # ## Transformation-2:
+# # train_set = Dataset(name=train_raw.name, imgs=train_rnoise_imgs, labels=train_raw.labels)
+# # valid_set = Dataset(name=valid_raw.name, imgs=valid_rnoise_imgs, labels=valid_raw.labels)
+#
+# history, model = DenseNET121().fit_binary_model(train_set, valid_set, dir_dnn_train, num_epochs, batch_size)
+#
+#
+# #########################################################################
+# ## Plot learning displayLearningCurve
+# history_file = os.path.join(dir_dnn_train, "DenseNet161-MMCXR_train_HistoryDict")
+# history_dict = pd.read_pickle(history_file)
+# history = pd.DataFrame.from_dict(history_dict)
+#
+# acc_filename = os.path.join(dir_dnn_train, "postpro_accuracy.png")
+# MetricsDisplay().plot_accuracy(history, filename=acc_filename)
+#
+# loss_filename = os.path.join(dir_dnn_train, "postpro_loss.png")
+# MetricsDisplay().plot_loss(history, filename=loss_filename)
+#
+# auc_filename = os.path.join(dir_dnn_train, "postpro_aucroc.png")
+# MetricsDisplay().plot_aucroc(history, filename=auc_filename)
 
 
 
-########################################################################
-## Interpretability visualization with saliency maps
-## Set directory path
-dir_vi_samples = str(sandbox + "/03-visualization_samples")
-dir_output_sm = Utils.make_dir(sandbox + "/04-output_sailency_maps")
-# print('visualization_samples', visualization_samples)
+# #########################################################################
+# ## DNN Evaluation
+# ## read test index file
+# # test_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_test_set-small.csv"))
+# test_df = pd.read_csv(os.path.join(dir_pp_index, "mimic_test_set.csv"))
+#
+# ## Load the mimic-cxr images in jpg
+# images_folder = "/data/01_UB/CXR_Datasets/mimic-cxr-jpg/"
+# # images_folder = "/home/jgarcia/datasets/physionet.org/files/mimic-cxr-jpg/2.0.0/"
+#
+# ## Load the model weights
+# weights_file = os.path.join(dir_dnn_train, "DenseNet161-MMCXR_weights.h5")
+#
+# ## Predict the test values and compute the confusion matrix
+# cm = DenseNET121().model_evaluation(test_df, images_folder, weights_file)
+#
+# ## Plot and save the confusion matrix
+# cm_filename = os.path.join(dir_dnn_train, "postpro_cm.png")
+# MetricsDisplay().plot_confusion_matrix(cm, filename=cm_filename)
 
-## Load the model weights
-weights_file = os.path.join(dir_dnn_train, "DenseNet161-MMCXR_weights.h5")
-# weights_file = os.path.join(dir_dnn_train, "DenseNet161-MMCXR_train_HistoryDict")
-print("+ weights_file: ", weights_file)
-model = DenseNET121().set_binary_model()
-model.load_weights(weights_file)
 
 
-## Displaying the gradient
-index = 0
-for img in Analyzer().load_images(glob(str(dir_vi_samples + "/*"))):
-    ## Using DeepTaylor method as analyzer
-    # img_analized = deepTaylor_SoftAnalyzer(img, model)
-    img_analized = Analyzer().deepTaylorAnalyzer(img, model)
-
-    # Displaying the gradient
-    plt.figure(str(index), figsize=(6, 6))
-    plt.axis('off')
-    # plt.imshow(img_analized.squeeze(), cmap='seismic', interpolation='nearest')
-    # plt.imshow(img_analized.squeeze(), cmap='Spectral', clim=(-1, 1))
-    plt.imshow(img.squeeze(), interpolation='none')
-    plt.imshow(img_analized.squeeze(), interpolation='none',
-                                    cmap='seismic', clim=(-1, 1))
-    # plt.set_cmap("seismic")
-    # plt.imshow(img_analized.squeeze(),
-    #                 interpolation='none',
-    #                 alpha=0.7)
-
-    plt.tight_layout()
-    plt.savefig(str(dir_output_sm + '/' + str(index)+ "_sm.png"))
-    plt.close()
-
-    ############################################################
-    plt.figure(str(index+1), figsize=(6, 6))
-    plt.axis('off')
-    plt.imshow(img.squeeze(), interpolation='none')
-    plt.imshow(img_analized.squeeze(),
-                                interpolation ='none',
-                                alpha = 0.3)
-    # plt.set_cmap("gist_rainbow")
-    plt.tight_layout()
-    plt.savefig(str(dir_output_sm + '/' + str(index)+ "_cxr.png"))
-    plt.close()
-
-    index = index + 1
+# ########################################################################
+# ## Interpretability visualization with saliency maps
+# ## Set directory path
+# dir_vi_samples = str(sandbox + "/03-visualization_samples")
+# dir_output_sm = Utils.make_dir(sandbox + "/04-output_sailency_maps")
+# # print('visualization_samples', visualization_samples)
+#
+# ## Load the model weights
+# weights_file = os.path.join(dir_dnn_train, "DenseNet161-MMCXR_weights.h5")
+# # weights_file = os.path.join(dir_dnn_train, "DenseNet161-MMCXR_train_HistoryDict")
+# print("+ weights_file: ", weights_file)
+# model = DenseNET121().set_binary_model()
+# model.load_weights(weights_file)
+#
+#
+# ## Displaying the gradient
+# index = 0
+# for img in Analyzer().load_images(glob(str(dir_vi_samples + "/*"))):
+#     ## Using DeepTaylor method as analyzer
+#     # img_analized = deepTaylor_SoftAnalyzer(img, model)
+#     img_analized = Analyzer().deepTaylorAnalyzer(img, model)
+#
+#     # Displaying the gradient
+#     plt.figure(str(index), figsize=(6, 6))
+#     plt.axis('off')
+#     # plt.imshow(img_analized.squeeze(), cmap='seismic', interpolation='nearest')
+#     # plt.imshow(img_analized.squeeze(), cmap='Spectral', clim=(-1, 1))
+#     plt.imshow(img.squeeze(), interpolation='none')
+#     plt.imshow(img_analized.squeeze(), interpolation='none',
+#                                     cmap='seismic', clim=(-1, 1))
+#     # plt.set_cmap("seismic")
+#     # plt.imshow(img_analized.squeeze(),
+#     #                 interpolation='none',
+#     #                 alpha=0.7)
+#
+#     plt.tight_layout()
+#     plt.savefig(str(dir_output_sm + '/' + str(index)+ "_sm.png"))
+#     plt.close()
+#
+#     ############################################################
+#     plt.figure(str(index+1), figsize=(6, 6))
+#     plt.axis('off')
+#     plt.imshow(img.squeeze(), interpolation='none')
+#     plt.imshow(img_analized.squeeze(),
+#                                 interpolation ='none',
+#                                 alpha = 0.3)
+#     # plt.set_cmap("gist_rainbow")
+#     plt.tight_layout()
+#     plt.savefig(str(dir_output_sm + '/' + str(index)+ "_cxr.png"))
+#     plt.close()
+#
+#     index = index + 1
